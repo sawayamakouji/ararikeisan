@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>売価還元法 利益シミュレーション (UX改善版 v2.4.4)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .column {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .inputs-column {
+            flex: 1;
+            min-width: 300px;
+        }
+        .outputs-column {
+            flex: 2;
+            min-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            border: 1px solid #e0e0e0;
+            padding: 15px 20px 20px 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            background-color: #fdfdfd;
+        }
+        .input-group legend {
+            font-weight: 600;
+            color: #34495e;
+            padding: 0 8px;
+            font-size: 1.1em;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+            color: #555;
+        }
+        .input-group input[type="number"] {
+            width: calc(100% - 12px);
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .input-group input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        #resetButton {
+            padding: 10px 18px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.95em;
+            width: 100%;
+            margin-top: 10px;
+        }
+        #resetButton:hover {
+            background-color: #c0392b;
+        }
+
+        .charts-area-container {}
+        .charts-title-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .legend {
+            font-size: 0.8em;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 10px;
+        }
+        .legend-item { display: flex; align-items: center; }
+        .legend-color-box { width: 12px; height: 12px; margin-right: 4px; border: 1px solid #ccc; }
+
+        .charts-grid {
+            display: flex;
+            gap: 25px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 130px;
+            text-align: center;
+        }
+        .chart-container p.chart-title { font-weight: 600; margin-bottom: 8px; font-size: 0.9em; color: #34495e; }
+        .chart-container p.chart-value { margin-bottom: 3px; font-size: 0.8em; line-height: 1.3; }
+        .chart-container p.chart-value span { font-weight: bold; }
+        .text-muted {
+            color: #999 !important;
+        }
+
+        .bar-chart {
+            width: 60px;
+            height: 280px;
+            border: 1px solid #b0b0b0;
+            display: flex;
+            flex-direction: column-reverse;
+            background-color: #e9ecef;
+            position: relative;
+            overflow: hidden;
+            border-radius: 3px 3px 0 0;
+        }
+        .bar-segment {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #212529;
+            font-size: 0.75em;
+            font-weight: bold;
+            overflow: hidden;
+            box-sizing: border-box;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            transition: height 0.3s ease-out, opacity 0.2s;
+        }
+        .bar-segment:hover { opacity: 0.85; }
+        .bar-segment span {
+             writing-mode: vertical-rl;
+             text-orientation: mixed;
+             transform: rotate(180deg);
+             padding: 2px 0;
+             white-space: nowrap;
+             max-height: 95%;
+             overflow: hidden;
+        }
+        .loss-segment span,
+        .baikahenko-segment span,
+        #sKimatsuBaikaInDisposition span {
+            color: #aaa;
+        }
+
+        .cost-kishu { background-color: #ffc107; }
+        .profit-kishu { background-color: #ffe082; }
+        .cost-shiire { background-color: #28a745; }
+        .profit-shiire-highlight { background-color: #81c784; }
+        .cost-kimatsu { background-color: #fd7e14; }
+        .profit-kimatsu { background-color: #ffc999; }
+        #sKimatsuBaikaInDisposition { background-color: #ffc999; }
+
+        .legend-gross-profit { background-color: #17a2b8; }
+        .legend-cogs { background-color: #6cb2eb; }
+        .loss-segment { background-color: rgba(220, 53, 69, 0.6); }
+        .baikahenko-segment { background-color: rgba(255, 193, 7, 0.6); }
+
+        .results-container {}
+        .results p { margin: 10px 0; font-size: 0.98em; padding-bottom: 8px; border-bottom: 1px dotted #eee; }
+        .results p:last-child { border-bottom: none; }
+        .results span.value { font-weight: bold; color: #007bff; font-size: 1.05em; }
+        .results span.formula-hint { font-size: 0.8em; color: #6c757d; display: block; margin-top: 2px; }
+        p.final-gross-margin-rate {
+            font-size: 1.2em !important;
+            font-weight: bold;
+            color: #28a745;
+            text-align: center;
+            padding: 10px;
+            border: 2px solid #28a745;
+            border-radius: 5px;
+            background-color: #e9f5ee;
+            margin-bottom: 20px !important;
+        }
+        p.final-gross-margin-rate .value {
+             color: #28a745 !important;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="column inputs-column">
+        <h2>入力項目</h2>
+        <fieldset class="input-group">
+            <legend>📊 期首在庫</legend>
+            <label for="kishuBaika">期首在庫売価 (円)</label>
+            <input type="number" id="kishuBaika" value="28601">
+            <label for="kishuGenka">期首在庫原価 (円)</label>
+            <input type="number" id="kishuGenka" value="22839">
+        </fieldset>
+
+        <fieldset class="input-group">
+            <legend>🚚 仕入</legend>
+            <label for="shiireBaika">仕入売価 (円)</label>
+            <input type="number" id="shiireBaika" value="10438">
+            <label for="shiireGenka">仕入原価 (円)</label>
+            <input type="number" id="shiireGenka" value="8626">
+        </fieldset>
+
+        <fieldset class="input-group">
+            <legend>🛒 売上と調整</legend>
+            <label for="uriage">売上高 (売価・円)</label>
+            <input type="number" id="uriage" value="11280">
+            <label for="loss">ロス (売価・円)</label>
+            <input type="number" id="loss" value="5">
+            <label for="baikaHenko">売変(値下げ額・円)</label>
+            <input type="number" id="baikaHenko" value="152">
+        </fieldset>
+        <button type="button" id="resetButton">入力値をリセット</button>
+    </div>
+
+    <div class="column outputs-column">
+        <div class="charts-area-container">
+            <div class="charts-title-area">
+                <h2>シミュレーション結果 (グラフ)</h2>
+                <div class="legend">
+                    <div class="legend-item"><span class="legend-color-box cost-kishu"></span>原価(期首)</div>
+                    <div class="legend-item"><span class="legend-color-box profit-kishu"></span>利益(期首)</div>
+                    <div class="legend-item"><span class="legend-color-box cost-shiire"></span>仕入原価</div>
+                    <div class="legend-item"><span class="legend-color-box profit-shiire-highlight"></span>仕入値入</div>
+                    <div class="legend-item"><span class="legend-color-box cost-kimatsu"></span>原価(期末)</div>
+                    <div class="legend-item"><span class="legend-color-box profit-kimatsu"></span>利益/売価(期末)</div>
+                    <div class="legend-item"><span class="legend-color-box legend-cogs"></span>売上原価</div>
+                    <div class="legend-item"><span class="legend-color-box legend-gross-profit"></span>荒利益</div>
+                    <div class="legend-item"><span class="legend-color-box loss-segment"></span>ロス</div>
+                    <div class="legend-item"><span class="legend-color-box baikahenko-segment"></span>売変</div>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <p class="chart-title">① 期首在庫</p>
+                    <div class="bar-chart" id="chartKishu">
+                        <div class="bar-segment cost-kishu" id="sKishuCost"><span></span></div>
+                        <div class="bar-segment profit-kishu" id="sKishuProfit"><span></span></div>
+
+                    </div>
+                    <p class="chart-value">売価: <span id="valKishuBaika">0</span></p>
+                    <p class="chart-value">原価: <span id="valKishuGenka">0</span></p>
+                    <p class="chart-value">原価率: <span id="rateKishuGenka">0</span>%</p>
+                    <p class="chart-value">利益率: <span id="rateKishuRieki">0</span>%</p>
+                </div>
+
+                <div class="chart-container">
+                    <p class="chart-title">② 供給可能在庫 (期首+仕入)</p>
+                    <div class="bar-chart" id="chartKishuShiire">
+                        <div class="bar-segment cost-kishu" id="sKishuCostCombined"><span></span></div>
+                        <div class="bar-segment profit-kishu" id="sKishuProfitCombined"><span></span></div>
+                        <div class="bar-segment cost-shiire" id="sShiireCostCombined"><span></span></div>
+                        <div class="bar-segment profit-shiire-highlight" id="sShiireProfit"><span></span></div>
+
+
+
+                    </div>
+                     <p class="chart-value">総売価: <span id="valKishuShiireBaika">0</span></p>
+                     <p class="chart-value">総原価: <span id="valKishuShiireGenka">0</span></p>
+                     <p class="chart-value">原価率: <span id="rateKishuShiireGenka">0</span>%</p>
+                     <p class="chart-value">値入率: <span id="rateKishuShiireNeire">0</span>%</p>
+                </div>
+
+                <div class="chart-container">
+                    <p class="chart-title">③ 期末在庫 (売価還元)</p>
+                    <div class="bar-chart" id="chartKimatsu">
+                        <div class="bar-segment cost-kimatsu" id="sKimatsuCost"><span></span></div>
+                        <div class="bar-segment profit-kimatsu" id="sKimatsuProfit"><span></span></div>
+
+                    </div>
+                    <p class="chart-value">売価: <span id="valKimatsuBaika">0</span></p>
+                    <p class="chart-value">原価: <span id="valKimatsuGenka">0</span></p>
+                    <p class="chart-value">原価率: <span id="rateKimatsuGenka">0</span>%</p>
+                    <p class="chart-value">利益率: <span id="rateKimatsuRieki">0</span>%</p>
+                </div>
+
+                <div class="chart-container" id="chartUriageDispositionContainer">
+                    <p class="chart-title">④ 売上高と ロス売変</p>
+                    <div class="bar-chart" id="barChartDisposition">
+                         <div class="bar-segment" id="sKimatsuBaikaInDisposition"><span></span></div>
+                         <div class="bar-segment baikahenko-segment" id="sBaikahenko"><span></span></div>
+                         <div class="bar-segment loss-segment" id="sLoss"><span></span></div>
+
+                         <div class="bar-segment legend-cogs" id="sUriageCogsDisp"><span></span></div>
+                         <div class="bar-segment legend-gross-profit" id="sUriageGrossProfitDisp"><span></span></div>
+                    </div>
+                    <p class="chart-value">売上高: <span id="valUriageForDisp">0</span></p>
+                    <p class="chart-value">荒利益: <span id="valArariGraphForDisp">0</span></p>
+                    <p class="chart-value">ロス/売変計: <span id="valLossBaikahenkoForDisp" class="text-muted">0</span></p>
+                    <p class="chart-value">売上原価: <span id="valUriageGenkaForDisp" class="text-muted">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="column results-container">
+            <h2>計算結果 (数値)</h2>
+            <p class="final-gross-margin-rate">最終荒利率: <span class="value" id="resArariritsuFinalValue">0</span>%</p>
+            <p>商品供給売価: <span class="value" id="resShohinKyokyuBaika">0</span> <span class="formula-hint">(期首売価+仕入売価-売変-ロス)</span></p>
+            <p>全体原価率: <span class="value" id="resGenkaritsu">0</span>% <span class="formula-hint">((期首原価+仕入原価)/商品供給売価) ※売価還元法のキー</span></p>
+            <p>期末売価在庫: <span class="value" id="resKimatsuBaikaZaiko">0</span> <span class="formula-hint">(商品供給売価-売上高)</span></p>
+            <p>期末原価在庫: <span class="value" id="resKimatsuGenkaZaiko">0</span> <span class="formula-hint">(期末売価在庫 × 全体原価率)</span></p>
+            <p>売上原価: <span class="value" id="resUriageGenka">0</span> <span class="formula-hint">(期首原価+仕入原価-期末原価在庫)</span></p>
+            <p>荒利益(額): <span class="value" id="resArari">0</span> <span class="formula-hint">(売上高-売上原価)</span></p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <p>検算1 (供給と処分): <span class="value" id="checkFormula1">0</span> <span class="formula-hint">(期首売価+仕入売価-売変-ロス)</span></p>
+            <p>検算2 (供給と処分): <span class="value" id="checkFormula2">0</span> <span class="formula-hint">(売上高+期末売価在庫) ※検算1と一致するはず</span></p>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const initialValues = {
+        kishuGenka: 22839,
+        kishuBaika: 28601,
+        shiireGenka: 8626,
+        shiireBaika: 10438,
+        uriage: 11280,
+        loss: 5,
+        baikaHenko: 152,
+    };
+
+    const inputs = {
+        kishuGenka: document.getElementById('kishuGenka'),
+        kishuBaika: document.getElementById('kishuBaika'),
+        shiireGenka: document.getElementById('shiireGenka'),
+        shiireBaika: document.getElementById('shiireBaika'),
+        uriage: document.getElementById('uriage'),
+        loss: document.getElementById('loss'),
+        baikaHenko: document.getElementById('baikaHenko'),
+    };
+
+    for (const key in initialValues) {
+        if (inputs[key]) {
+            inputs[key].value = initialValues[key];
+        } else {
+            console.error(`Input element for initialValue key "${key}" not found in inputs object.`);
+        }
+    }
+
+    const segments = {
+        sKishuCost: document.getElementById('sKishuCost'),
+        sKishuProfit: document.getElementById('sKishuProfit'),
+        sKishuCostCombined: document.getElementById('sKishuCostCombined'),
+        sKishuProfitCombined: document.getElementById('sKishuProfitCombined'),
+        sShiireCostCombined: document.getElementById('sShiireCostCombined'),
+        sShiireProfit: document.getElementById('sShiireProfit'),
+        sKimatsuCost: document.getElementById('sKimatsuCost'),
+        sKimatsuProfit: document.getElementById('sKimatsuProfit'),
+        sUriageCogsDisp: document.getElementById('sUriageCogsDisp'),
+        sUriageGrossProfitDisp: document.getElementById('sUriageGrossProfitDisp'),
+        sKimatsuBaikaInDisposition: document.getElementById('sKimatsuBaikaInDisposition'),
+        sLoss: document.getElementById('sLoss'),
+        sBaikahenko: document.getElementById('sBaikahenko'),
+    };
+
+    const results = {
+        resArariritsuFinalValue: document.getElementById('resArariritsuFinalValue'),
+        resShohinKyokyuBaika: document.getElementById('resShohinKyokyuBaika'),
+        resGenkaritsu: document.getElementById('resGenkaritsu'),
+        resKimatsuBaikaZaiko: document.getElementById('resKimatsuBaikaZaiko'),
+        resKimatsuGenkaZaiko: document.getElementById('resKimatsuGenkaZaiko'),
+        resUriageGenka: document.getElementById('resUriageGenka'),
+        resArari: document.getElementById('resArari'),
+        checkFormula1: document.getElementById('checkFormula1'),
+        checkFormula2: document.getElementById('checkFormula2'),
+    };
+
+    const chartValues = {
+        valKishuBaika: document.getElementById('valKishuBaika'),
+        valKishuGenka: document.getElementById('valKishuGenka'),
+        rateKishuGenka: document.getElementById('rateKishuGenka'),
+        rateKishuRieki: document.getElementById('rateKishuRieki'),
+        valKishuShiireBaika: document.getElementById('valKishuShiireBaika'),
+        valKishuShiireGenka: document.getElementById('valKishuShiireGenka'),
+        rateKishuShiireGenka: document.getElementById('rateKishuShiireGenka'),
+        rateKishuShiireNeire: document.getElementById('rateKishuShiireNeire'),
+        valKimatsuBaika: document.getElementById('valKimatsuBaika'),
+        valKimatsuGenka: document.getElementById('valKimatsuGenka'),
+        rateKimatsuGenka: document.getElementById('rateKimatsuGenka'),
+        // rateKishuRieki は期首在庫の利益率で、上記に既に定義あり
+        valUriageForDisp: document.getElementById('valUriageForDisp'),
+        valArariGraphForDisp: document.getElementById('valArariGraphForDisp'),
+        valLossBaikahenkoForDisp: document.getElementById('valLossBaikahenkoForDisp'),
+        valUriageGenkaForDisp: document.getElementById('valUriageGenkaForDisp'),
+    };
+
+    const CHART_MAX_PIXEL_HEIGHT = 280;
+
+    function updateChartSegment(segmentElement, value, overallMaxBaika, textOverride = null) {
+        if (!segmentElement) {
+            return;
+        }
+        const heightPx = (overallMaxBaika > 0 && value > 0) ? (value / overallMaxBaika) * CHART_MAX_PIXEL_HEIGHT : 0;
+        segmentElement.style.height = Math.max(0, heightPx) + 'px';
+
+        const textToShow = textOverride !== null ? textOverride : (value > 0 ? value.toFixed(0) : "");
+        const spanElement = segmentElement.querySelector('span');
+        if (spanElement) {
+            spanElement.textContent = textToShow;
+            spanElement.style.visibility = (heightPx < 12) ? 'hidden' : 'visible';
+        }
+        segmentElement.style.visibility = value > 0 && heightPx > 0 ? 'visible' : 'hidden';
+    }
+
+
+    function calculateAndDraw() {
+        let allInputsValid = true;
+        for (const key in inputs) {
+            if (!inputs[key]) {
+                console.error(`Input element "${key}" is null or undefined.`);
+                allInputsValid = false;
+            }
+        }
+        if (!allInputsValid) {
+            console.error("Halting calculation due to missing input elements.");
+            return;
+        }
+
+        const kG = parseFloat(inputs.kishuGenka.value) || 0;
+        const kB = parseFloat(inputs.kishuBaika.value) || 0;
+        const sG = parseFloat(inputs.shiireGenka.value) || 0;
+        const sB = parseFloat(inputs.shiireBaika.value) || 0;
+        const u = parseFloat(inputs.uriage.value) || 0;
+        const l = parseFloat(inputs.loss.value) || 0;
+        const bH = parseFloat(inputs.baikaHenko.value) || 0;
+
+        const maxOverallBaika = Math.max(1, kB + sB);
+
+        const shohinKyokyuBaika = kB + sB - bH - l;
+        results.resShohinKyokyuBaika.textContent = shohinKyokyuBaika.toFixed(1);
+        const genkaritsuDenominator = kB + sB - bH - l;
+        const genkaritsu = (genkaritsuDenominator > 0) ? ((kG + sG) / genkaritsuDenominator) : 0;
+        results.resGenkaritsu.textContent = (genkaritsu * 100).toFixed(1);
+        const kimatsuBaikaZaiko = shohinKyokyuBaika - u;
+        results.resKimatsuBaikaZaiko.textContent = kimatsuBaikaZaiko.toFixed(1);
+        const kimatsuGenkaZaiko = kimatsuBaikaZaiko * genkaritsu;
+        results.resKimatsuGenkaZaiko.textContent = kimatsuGenkaZaiko.toFixed(1);
+        const uriageGenka = kG + sG - kimatsuGenkaZaiko;
+        results.resUriageGenka.textContent = uriageGenka.toFixed(1);
+        const arari = u - uriageGenka;
+        results.resArari.textContent = arari.toFixed(1);
+
+        const finalArariRitsu = (u > 0) ? (arari / u * 100) : 0;
+        if (results.resArariritsuFinalValue) {
+             results.resArariritsuFinalValue.textContent = finalArariRitsu.toFixed(1);
+        }
+
+
+        results.checkFormula1.textContent = (kB + sB - bH - l).toFixed(1);
+        results.checkFormula2.textContent = (u + kimatsuBaikaZaiko).toFixed(1);
+
+        // 1. 期首在庫グラフ
+        const kishuProfit = kB - kG;
+        updateChartSegment(segments.sKishuCost, kG, maxOverallBaika);
+        updateChartSegment(segments.sKishuProfit, kishuProfit, maxOverallBaika);
+        chartValues.valKishuBaika.textContent = kB.toFixed(0);
+        chartValues.valKishuGenka.textContent = kG.toFixed(0);
+        const rateKishuGenkaVal = (kB !== 0) ? (kG / kB * 100) : 0;
+        chartValues.rateKishuGenka.textContent = rateKishuGenkaVal.toFixed(1);
+        const rateKishuRiekiVal = (kB !== 0 && kishuProfit >= 0) ? (kishuProfit / kB * 100) : 0;
+        chartValues.rateKishuRieki.textContent = rateKishuRiekiVal.toFixed(1);
+
+        // 2. 期首在庫 + 仕入グラフ
+        const totalBaikaKishuShiire = kB + sB;
+        const totalGenkaKishuShiire = kG + sG;
+        const kishuProfitCombined = kB - kG;
+        const shiireProfitActual = sB - sG;
+        updateChartSegment(segments.sKishuCostCombined, kG, maxOverallBaika);
+        updateChartSegment(segments.sShiireCostCombined, sG, maxOverallBaika);
+        updateChartSegment(segments.sKishuProfitCombined, kishuProfitCombined, maxOverallBaika);
+        updateChartSegment(segments.sShiireProfit, shiireProfitActual, maxOverallBaika);
+        chartValues.valKishuShiireBaika.textContent = totalBaikaKishuShiire.toFixed(0);
+        chartValues.valKishuShiireGenka.textContent = totalGenkaKishuShiire.toFixed(0);
+        const rateKishuShiireGenkaVal = (totalBaikaKishuShiire !== 0) ? (totalGenkaKishuShiire / totalBaikaKishuShiire * 100) : 0;
+        chartValues.rateKishuShiireGenka.textContent = rateKishuShiireGenkaVal.toFixed(1);
+        const rateKishuShiireNeireVal = (totalBaikaKishuShiire !== 0) ? ((totalBaikaKishuShiire - totalGenkaKishuShiire) / totalBaikaKishuShiire * 100) : 0;
+        chartValues.rateKishuShiireNeire.textContent = rateKishuShiireNeireVal.toFixed(1);
+
+        // 3. 期末在庫グラフ
+        const kimatsuProfit = Math.max(0, kimatsuBaikaZaiko - kimatsuGenkaZaiko);
+        updateChartSegment(segments.sKimatsuCost, Math.max(0, kimatsuGenkaZaiko), maxOverallBaika);
+        updateChartSegment(segments.sKimatsuProfit, kimatsuProfit, maxOverallBaika);
+        chartValues.valKimatsuBaika.textContent = kimatsuBaikaZaiko.toFixed(0);
+        chartValues.valKimatsuGenka.textContent = kimatsuGenkaZaiko.toFixed(0);
+        chartValues.rateKimatsuGenka.textContent = (kimatsuBaikaZaiko > 0 ? (genkaritsu * 100) : 0).toFixed(1);
+        if (kimatsuBaikaZaiko > 0) {
+             chartValues.rateKishuRieki.textContent = ((1 - genkaritsu) * 100).toFixed(1); // ★期末在庫の利益率の参照先を修正
+        } else {
+             chartValues.rateKishuRieki.textContent = "---"; // ★期末在庫の利益率の参照先を修正
+        }
+
+        // 4. 売上高と ロス売変 グラフ
+        const arariForGraph = Math.max(0, arari);
+        const uriageGenkaForGraph = Math.max(0, u - arariForGraph);
+        const kimatsuBaikaZaikoForDispGraph = Math.max(0, kimatsuBaikaZaiko);
+        const lossForDispGraph = Math.max(0, l);
+        const baikahenkoForDispGraph = Math.max(0, bH);
+
+        updateChartSegment(segments.sUriageCogsDisp, uriageGenkaForGraph, maxOverallBaika);
+        updateChartSegment(segments.sUriageGrossProfitDisp, arariForGraph, maxOverallBaika);
+        if(segments.sKimatsuBaikaInDisposition) segments.sKimatsuBaikaInDisposition.className = 'bar-segment profit-kimatsu';
+        updateChartSegment(segments.sKimatsuBaikaInDisposition, kimatsuBaikaZaikoForDispGraph, maxOverallBaika);
+        updateChartSegment(segments.sLoss, lossForDispGraph, maxOverallBaika);
+        updateChartSegment(segments.sBaikahenko, baikahenkoForDispGraph, maxOverallBaika);
+
+        if (chartValues.valUriageForDisp) chartValues.valUriageForDisp.textContent = u.toFixed(0);
+        if (chartValues.valArariGraphForDisp) chartValues.valArariGraphForDisp.textContent = arari.toFixed(0);
+        if (chartValues.valLossBaikahenkoForDisp) chartValues.valLossBaikahenkoForDisp.textContent = (l + bH).toFixed(0);
+        if (chartValues.valUriageGenkaForDisp) chartValues.valUriageGenkaForDisp.textContent = uriageGenkaForGraph.toFixed(0);
+    }
+
+    const resetButton = document.getElementById('resetButton');
+    if (resetButton) {
+        resetButton.addEventListener('click', function() {
+            for (const key in initialValues) {
+                if (inputs[key]) {
+                    inputs[key].value = initialValues[key];
+                }
+            }
+            calculateAndDraw();
+        });
+    }
+
+    for (let key in inputs) {
+        if (inputs[key]) {
+            inputs[key].addEventListener('input', calculateAndDraw);
+        } else {
+            console.error("Element not found for input:", key);
+        }
+    }
+    calculateAndDraw();
+
+});
+</script>
+
+</body>
+</html>
