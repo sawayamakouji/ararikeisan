@@ -478,8 +478,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 1. 期首在庫グラフ
         const kishuProfit = kB - kG;
-        updateChartSegment(segments.sKishuCost, kG, maxOverallBaika, `原価: ${kG.toFixed(0)}`);
-        updateChartSegment(segments.sKishuProfit, kishuProfit, maxOverallBaika, `利益: ${kishuProfit.toFixed(0)}`);
+        updateChartSegment(segments.sKishuCost, kG, maxOverallBaika, `:${kG.toFixed(0)}`);
+        updateChartSegment(segments.sKishuProfit, kishuProfit, maxOverallBaika, `${kishuProfit.toFixed(0)}`);
         chartValues.valKishuBaika.textContent = kB.toFixed(0);
         chartValues.valKishuGenka.textContent = kG.toFixed(0);
         const rateKishuGenkaVal = (kB !== 0) ? (kG / kB * 100) : 0;
@@ -492,10 +492,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalGenkaKishuShiire = kG + sG;
         const kishuProfitCombined = kB - kG;
         const shiireProfitActual = sB - sG;
-        updateChartSegment(segments.sKishuCostCombined, kG, maxOverallBaika, `期首原価: ${kG.toFixed(0)}`);
-        updateChartSegment(segments.sKishuProfitCombined, kishuProfitCombined, maxOverallBaika, `期首利益: ${kishuProfitCombined.toFixed(0)}`);
-        updateChartSegment(segments.sShiireCostCombined, sG, maxOverallBaika, `仕入原価: ${sG.toFixed(0)}`);
-        updateChartSegment(segments.sShiireProfit, shiireProfitActual, maxOverallBaika, `仕入値入: ${shiireProfitActual.toFixed(0)}`);
+        updateChartSegment(segments.sKishuCostCombined, kG, maxOverallBaika, ` ${kG.toFixed(0)}`);
+        updateChartSegment(segments.sKishuProfitCombined, kishuProfitCombined, maxOverallBaika, ` ${kishuProfitCombined.toFixed(0)}`);
+        updateChartSegment(segments.sShiireCostCombined, sG, maxOverallBaika, `${sG.toFixed(0)}`);
+        updateChartSegment(segments.sShiireProfit, shiireProfitActual, maxOverallBaika, `${shiireProfitActual.toFixed(0)}`);
         chartValues.valKishuShiireBaika.textContent = totalBaikaKishuShiire.toFixed(0);
         chartValues.valKishuShiireGenka.textContent = totalGenkaKishuShiire.toFixed(0);
         const rateKishuShiireGenkaVal = (totalBaikaKishuShiire !== 0) ? (totalGenkaKishuShiire / totalBaikaKishuShiire * 100) : 0;
@@ -505,8 +505,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 3. 期末在庫グラフ
         const kimatsuProfit = Math.max(0, kimatsuBaikaZaiko - kimatsuGenkaZaiko);
-        updateChartSegment(segments.sKimatsuCost, Math.max(0, kimatsuGenkaZaiko), maxOverallBaika, `期末原価: ${kimatsuGenkaZaiko.toFixed(0)}`);
-        updateChartSegment(segments.sKimatsuProfit, kimatsuProfit, maxOverallBaika, `期末利益: ${kimatsuProfit.toFixed(0)}`);
+        updateChartSegment(segments.sKimatsuCost, Math.max(0, kimatsuGenkaZaiko), maxOverallBaika, `${kimatsuGenkaZaiko.toFixed(0)}`);
+        updateChartSegment(segments.sKimatsuProfit, kimatsuProfit, maxOverallBaika, `${kimatsuProfit.toFixed(0)}`);
         chartValues.valKimatsuBaika.textContent = kimatsuBaikaZaiko.toFixed(0);
         chartValues.valKimatsuGenka.textContent = kimatsuGenkaZaiko.toFixed(0);
         chartValues.rateKimatsuGenka.textContent = (kimatsuBaikaZaiko > 0 ? (genkaritsu * 100) : 0).toFixed(1);
@@ -523,12 +523,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const lossForDispGraph = Math.max(0, l);
         const baikahenkoForDispGraph = Math.max(0, bH);
 
-        updateChartSegment(segments.sUriageCogsDisp, uriageGenkaForGraph, maxOverallBaika, `売上原価: ${uriageGenkaForGraph.toFixed(0)}`);
-        updateChartSegment(segments.sUriageGrossProfitDisp, arariForGraph, maxOverallBaika, `荒利益: ${arariForGraph.toFixed(0)}`);
+        updateChartSegment(segments.sUriageCogsDisp, uriageGenkaForGraph, maxOverallBaika, ` ${uriageGenkaForGraph.toFixed(0)}`);
+        updateChartSegment(segments.sUriageGrossProfitDisp, arariForGraph, maxOverallBaika, `${arariForGraph.toFixed(0)}`);
         if(segments.sKimatsuBaikaInDisposition) segments.sKimatsuBaikaInDisposition.className = 'bar-segment profit-kimatsu';
-        updateChartSegment(segments.sKimatsuBaikaInDisposition, kimatsuBaikaZaikoForDispGraph, maxOverallBaika, `期末売価: ${kimatsuBaikaZaikoForDispGraph.toFixed(0)}`);
-        updateChartSegment(segments.sLoss, lossForDispGraph, maxOverallBaika, `ロス: ${lossForDispGraph.toFixed(0)}`);
-        updateChartSegment(segments.sBaikahenko, baikahenkoForDispGraph, maxOverallBaika, `売変: ${baikahenkoForDispGraph.toFixed(0)}`);
+        updateChartSegment(segments.sKimatsuBaikaInDisposition, kimatsuBaikaZaikoForDispGraph, maxOverallBaika, ` ${kimatsuBaikaZaikoForDispGraph.toFixed(0)}`);
+        updateChartSegment(segments.sLoss, lossForDispGraph, maxOverallBaika, `${lossForDispGraph.toFixed(0)}`);
+        updateChartSegment(segments.sBaikahenko, baikahenkoForDispGraph, maxOverallBaika, `${baikahenkoForDispGraph.toFixed(0)}`);
 
         if (chartValues.valUriageForDisp) chartValues.valUriageForDisp.textContent = u.toFixed(0);
         if (chartValues.valArariGraphForDisp) chartValues.valArariGraphForDisp.textContent = arari.toFixed(0);
